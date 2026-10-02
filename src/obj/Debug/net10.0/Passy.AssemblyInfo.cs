@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Passy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b3c2d559c0844f75ea4c4ba82c2c42e9142588d6")]
 [assembly: System.Reflection.AssemblyProductAttribute("Passy")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Passy")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
