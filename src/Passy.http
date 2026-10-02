@@ -1,6 +1,0 @@
-@Passy_HostAddress = http://localhost:5126
-
-GET {{Passy_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

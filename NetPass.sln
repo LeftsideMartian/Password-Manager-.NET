@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Passy", "src\Passy.csproj", "{7231DB17-EE9A-4008-A856-B80A42F4F4A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetPass", "src\NetPass.csproj", "{7231DB17-EE9A-4008-A856-B80A42F4F4A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
