@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Passy.Data;
+using NetPass.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

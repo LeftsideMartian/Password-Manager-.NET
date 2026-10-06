@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Passy.Models;
+namespace NetPass.Models;
 
 public class User
 {

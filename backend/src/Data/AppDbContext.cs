@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Passy.Models;
+using NetPass.Models;
 
-namespace Passy.Data;
+namespace NetPass.Data;
 
 public class AppDbContext(DbContextOptions options) : DbContext(options)
 {
