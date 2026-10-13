@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using NetPass.DTO;
 
 namespace NetPass.Models;
 
