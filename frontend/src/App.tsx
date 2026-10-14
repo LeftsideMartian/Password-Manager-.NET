@@ -65,6 +65,8 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   );
 }
 
+// TODO(frontend-backend): Replace the demo credentials with the authenticated
+// user's vault returned by the backend.
 const vaultItems = [
   {
     title: "GitHub",
@@ -249,6 +251,8 @@ function App() {
             active={view === "vault"}
             icon="key"
             label="My vault"
+            // TODO(frontend-backend): Populate this badge with the user's
+            // current credential count.
             badge="12"
             onClick={() => {
               setView("vault");
@@ -392,6 +396,8 @@ function Overview({
     <div className="overview">
       <section className="welcome-row">
         <div>
+          {/* TODO: Use the current date or the user's
+              locale-aware activity date instead of this demo date. */}
           <p className="eyebrow">Wednesday, October 14, 2026</p>
           <h1>
             Good evening, <em>{firstName}.</em>
@@ -405,6 +411,8 @@ function Overview({
         </button>
       </section>
       <section className="stats-grid">
+        {/* TODO: Replace these demo values with vault
+            statistics and the latest security-check result from the backend. */}
         <Stat
           icon="key"
           label="Saved passwords"
@@ -471,6 +479,8 @@ function Overview({
           </button>
         </div>
         <div className="credential-list">
+          {/* TODO: Render the user's latest credentials,
+              ordered by the backend's saved/updated timestamp. */}
           {vaultItems.slice(0, 3).map((item) => (
             <Credential
               item={item}
@@ -573,6 +583,8 @@ function Credential({
 function Vault() {
   const [search, setSearch] = useState("");
   const [showAddOverlay, setShowAddOverlay] = useState(false);
+  // TODO: Load credentials for the authenticated user and
+  // keep this list in sync after create, update, and delete requests.
   const [credentials, setCredentials] = useState(vaultItems);
   const [category, setCategory] = useState("All");
   const [selectedCredential, setSelectedCredential] = useState<
@@ -646,6 +658,8 @@ function Vault() {
           item={selectedCredential}
           onClose={() => setSelectedCredential(null)}
           onDeleted={() => {
+            // TODO: Delete the credential through the API
+            // and remove it from local state only after success.
             setCredentials((current) =>
               current.filter(
                 (credential) => credential.title !== selectedCredential.title,
@@ -694,6 +708,8 @@ function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    // TODO: Persist the new credential before closing the
+    // dialog, then refresh the vault list from the backend.
     onClose();
   }
 
@@ -881,6 +897,8 @@ function ViewCredentialOverlay({
 }) {
   const [site, setSite] = useState(item.title);
   const [username, setUsername] = useState(item.username);
+  // TODO(frontend-backend): Load the decrypted credential value only when
+  // this detail view is authorised, rather than using a demo password.
   const [password, setPassword] = useState("vR8!kP2#xL9@mN4$wQ7&");
   const [category, setCategory] = useState(item.category);
   const [notes, setNotes] = useState("");
@@ -916,6 +934,8 @@ function ViewCredentialOverlay({
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    // TODO(frontend-backend): Persist the edited credential before closing
+    // the dialog and update the vault list with the saved response.
     onClose();
   }
 
@@ -1330,6 +1350,8 @@ function Settings({ email }: { email: string }) {
           </div>
           <label>Email address</label>
           <input type="email" value={email} readOnly />
+          {/* TODO(frontend-backend): Submit profile changes to the account
+              endpoint and show success or validation feedback. */}
           <button className="secondary-button">Save changes</button>
         </div>
         <div className="settings-section">
@@ -1343,6 +1365,8 @@ function Settings({ email }: { email: string }) {
             </div>
           </div>
           <button className="settings-row">
+            {/* TODO(frontend-backend): Open the master-password change flow
+                and submit the update through the account API. */}
             <span>
               <strong>Change master password</strong>
               <small>Update the password used to unlock your vault</small>
@@ -1350,6 +1374,8 @@ function Settings({ email }: { email: string }) {
             <Icon name="chevron" size={17} />
           </button>
           <button className="settings-row">
+            {/* TODO(frontend-backend): Replace this placeholder state with
+                the user's 2FA status and connect the setup flow. */}
             <span>
               <strong>Two-factor authentication</strong>
               <small>Add an extra layer of security to your account</small>
