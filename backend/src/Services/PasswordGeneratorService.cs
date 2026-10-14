@@ -16,7 +16,7 @@ public sealed class PasswordGeneratorService : IPasswordGeneratorService
     private const string Symbols = "!@#$%^&*()-_=+[]{}:,.?";
 
     // Words generated using Claude.ai, removed words starting with 'x'
-    private readonly string[] WordBank =
+    private static readonly string[] WordBank =
     [
         "apple", "animal", "answer", "arrow", "autumn",
         "banana", "bridge", "bottle", "brother", "button",
@@ -47,10 +47,15 @@ public sealed class PasswordGeneratorService : IPasswordGeneratorService
 
     public GeneratePasswordResponse Generate(GeneratePasswordRequest request)
     {
-        var profile;
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request), "Request cannot be null.");
+        }
+
+        var profile = request.Profile ?? "Strong";
         var isEasyToType = false;
 
-        if (request.Profile.Equals("EasyToType", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.Profile, "EasyToType", StringComparison.OrdinalIgnoreCase))
         {
             profile = "EasyToType";
             isEasyToType = true;
@@ -98,7 +103,7 @@ public sealed class PasswordGeneratorService : IPasswordGeneratorService
             if (i == capitalisedWordIndex)
             {
                 // Capitlises one of the words to satisfy common password requirement
-                var word = words[RandomNumberGenerator.GetInt32(words.Length)];
+                var word = WordBank[RandomNumberGenerator.GetInt32(WordBank.Length)];
                 words[i] = char.ToUpper(word[0]) + word[1..];
             }
             else
