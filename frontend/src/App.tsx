@@ -127,7 +127,7 @@ function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
           <span className="brand-mark">
             <Icon name="shield" size={20} />
           </span>
-          <span>Passy</span>
+          <span>NetPass</span>
         </div>
         <div className="auth-heading">
           <p className="eyebrow">Welcome back</p>
@@ -232,7 +232,7 @@ function App() {
           <span className="brand-mark">
             <Icon name="shield" size={20} />
           </span>
-          <span>Passy</span>
+          <span>NetPass</span>
         </div>
         <nav className="main-nav" aria-label="Main navigation">
           <p className="nav-label">Workspace</p>
@@ -594,7 +594,7 @@ function Vault() {
             My <em>vault.</em>
           </h1>
           <p className="page-subtitle">
-            {credentials.length} credentials protected by Passy.
+            {credentials.length} credentials protected by NetPass.
           </p>
         </div>
         <button
