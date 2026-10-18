@@ -13,7 +13,7 @@ public class AuthController(IJwtService jwtService) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
-    public Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
     {
         try
         {
