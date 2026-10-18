@@ -11,6 +11,7 @@ namespace NetPass.Controllers;
 [Route("/user")]
 public class UserController(IUserService userService) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
     {
