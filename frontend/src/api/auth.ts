@@ -7,5 +7,5 @@ export async function login(email: string, password: string) {
     password,
   };
 
-  return apiPost<LoginRequest, LoginResponse>("/login", body);
+  return apiPost<LoginRequest, LoginResponse>("/auth/login", body);
 }
