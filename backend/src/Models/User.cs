@@ -7,7 +7,6 @@ namespace NetPass.Models;
 
 public class User
 {
-    [Key]
     public int UserId { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
@@ -15,10 +14,10 @@ public class User
     public string Password { get; set; } = string.Empty;
 }
 
-// public class UserConfiguration :  IEntityTypeConfiguration<User>{
-//     public void Configure(EntityTypeBuilder<User> builder)
-//     {
-//         
-//     }
-//     
-// }
+public class UserConfiguration :  IEntityTypeConfiguration<User>{
+    public void Configure(EntityTypeBuilder<User> builder)
+    {
+        builder.HasIndex(x => x.Email).IsUnique();
+    }
+    
+}

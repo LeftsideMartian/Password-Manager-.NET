@@ -23,5 +23,4 @@ public class CredentialConfiguration :  IEntityTypeConfiguration<Credential>{
             .HasForeignKey("UserId")
             .OnDelete(DeleteBehavior.Cascade);
     }
-    
 }
