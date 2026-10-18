@@ -15,7 +15,7 @@ public class EncryptionService : IEncryptionService
 
     public EncryptionService(IConfiguration config)
     {
-        var base64Key = config["EncryptionService:Key"] ?? throw new Exception("Encryption service key is missing");
+        var base64Key = config["Encryption:Key"] ?? throw new Exception("Encryption service key is missing");
         _key = Convert.FromBase64String(base64Key);
     }
     

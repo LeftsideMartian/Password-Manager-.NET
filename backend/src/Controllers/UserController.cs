@@ -19,7 +19,7 @@ public class UserController(IUserService userService) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = newUser.UserId }, newUser);
     }
 
-    [HttpGet("/user/{id:int}")]
+    [HttpGet("{id:int}")]
     public IActionResult GetById([FromRoute] int id)
     {
         // var user = appDb.Users.Find(id);
@@ -27,7 +27,7 @@ public class UserController(IUserService userService) : ControllerBase
         throw new NotImplementedException();
     }
 
-    [HttpPost("/user/{id}/password")]
+    [HttpPost("{userId:int}/password")]
     public IActionResult ChangePassword([FromBody] ChangePasswordRequest request, [FromRoute] int userId)
     {
         userService.ChangeUserPassword(request, userId);
@@ -35,14 +35,14 @@ public class UserController(IUserService userService) : ControllerBase
         return Ok();
     }
     
-    [HttpPost("/user/{id}")]
+    [HttpPost("{userId:int}")]
     public IActionResult UpdateDetails([FromBody] UpdateUserRequest request, [FromRoute] int userId)
     {
         userService.UpdateUserDetails(request, userId);
         return Ok();
     }
     
-    [HttpDelete("/user/{id}")]
+    [HttpDelete("{userId:int}")]
     public IActionResult DeleteUser([FromRoute] int userId)
     {
         userService.DeleteUser(userId);

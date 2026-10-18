@@ -12,7 +12,7 @@ namespace NetPass.Controllers;
 public class AuthController(IJwtService jwtService) : ControllerBase
 {
     [AllowAnonymous]
-    [HttpPost("/login")]
+    [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
         try
