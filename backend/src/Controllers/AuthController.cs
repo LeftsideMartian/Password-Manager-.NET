@@ -13,11 +13,11 @@ public class AuthController(IJwtService jwtService) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("/login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
     {
         try
         {
-            return Ok(jwtService.Authenticate(request));
+            return Ok(await jwtService.AuthenticateAsync(request));
         }
         catch (AuthenticationException e)
         {
