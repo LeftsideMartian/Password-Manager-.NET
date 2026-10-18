@@ -7,9 +7,9 @@ namespace NetPass.Models;
 
 public class Login : Credential
 {
-    [MaxLength(100)]
+    [MaxLength(200)]
     public required string Username { get; set; }
-    [MaxLength(100)]
+    [MaxLength(200)]
     public required string Password { get; set; }
 }
 

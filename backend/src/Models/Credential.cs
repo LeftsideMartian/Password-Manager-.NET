@@ -9,7 +9,7 @@ public abstract class Credential
 {
     public int CredentialId { get; set; }
     public int UserId { get; set; }
-    [MaxLength(1000)]
+    [MaxLength(2000)]
     public string? Notes { get; set; }
 }
 
