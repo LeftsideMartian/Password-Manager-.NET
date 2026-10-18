@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Icon } from "../components/Icon";
-import { vaultItems } from "./vaultData";
-import type { VaultItem } from "./types";
-import { AddCredentialOverlay, ViewCredentialOverlay } from "./overlays";
-import { Credential } from "./Overview";
+import { vaultItems } from "../utils/vaultData";
+import type { VaultItem } from "../utils/types";
+import { Credential } from "../components/Credential";
+import { AddCredentialOverlay } from "./AddCredentialOverlay";
+import { ViewCredentialOverlay } from "./ViewCredentialOverlay";
 
 export function Vault() {
   const [search, setSearch] = useState("");
@@ -12,16 +13,22 @@ export function Vault() {
   // keep this list in sync after create, update, and delete requests.
   const [credentials, setCredentials] = useState<VaultItem[]>([...vaultItems]);
   const [category, setCategory] = useState("All");
-  const [selectedCredential, setSelectedCredential] = useState<
-    VaultItem | null
-  >(null);
-  const filtered = credentials.filter((item) =>
-    (category === "All" || item.category === category) &&
-    `${item.title} ${item.username} ${item.category}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
+  const [selectedCredential, setSelectedCredential] =
+    useState<VaultItem | null>(null);
+
+  const filtered = credentials.filter(
+    (item) =>
+      (category === "All" || item.category === category) &&
+      `${item.title} ${item.username} ${item.category}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   );
-  const categories = ["All", ...new Set(credentials.map((item) => item.category))];
+
+  const categories = [
+    "All",
+    ...new Set(credentials.map((item) => item.category)),
+  ];
+
   return (
     <div className="vault-view">
       <section className="welcome-row">

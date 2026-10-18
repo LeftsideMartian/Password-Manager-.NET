@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { generatePassword } from "../api";
 import { Icon } from "../components/Icon";
+import { generatePassword } from "../api/password";
 
 export function Generator() {
   const [profile, setProfile] = useState<"Strong" | "EasyToType">("Strong");
@@ -15,7 +15,6 @@ export function Generator() {
     setGenerationError("");
     try {
       const result = await generatePassword(
-        localStorage.getItem("token") ?? "",
         profile,
         profile === "Strong" ? length : undefined,
       );

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import type { SubmitEvent } from "react";
-import { login } from "../api";
 import { Icon } from "../components/Icon";
+import { login } from "../api/auth";
+import { useUser } from "../context/UserContext";
 
-export function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
+export function LoginScreen() {
+  const { signIn } = useUser();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,10 +17,9 @@ export function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
     event.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const session = await login(email, password);
-      localStorage.setItem("token", session.token);
-      onLogin(session.email);
+      signIn(await login(email, password));
     } catch {
       setError("We could not sign you in. Check your details and try again.");
     } finally {
@@ -36,13 +38,7 @@ export function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
           </span>
           <span>NetPass</span>
         </div>
-        <div className="auth-heading">
-          <p className="eyebrow">Welcome back</p>
-          <h1>
-            Your passwords, <em>protected.</em>
-          </h1>
-          <p className="auth-subtitle">Sign in to access your secure vault.</p>
-        </div>
+        <div className="auth-heading"></div>
         <form onSubmit={submit} className="auth-form">
           <label htmlFor="email">Email address</label>
           <input
@@ -89,7 +85,8 @@ export function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
               "Signing in…"
             ) : (
               <>
-                Unlock vault <Icon name="arrow" size={17} />
+                Sign in
+                <Icon name="arrow" size={17} />
               </>
             )}
           </button>
@@ -100,19 +97,6 @@ export function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
             Create one
           </button>
         </p>
-        {import.meta.env.DEV && (
-          <button
-            type="button"
-            className="preview-button"
-            onClick={() => onLogin("demo@example.com")}
-          >
-            Preview the app <Icon name="arrow" size={14} />
-          </button>
-        )}
-        <div className="auth-trust">
-          <Icon name="lock" size={14} /> End-to-end encrypted · Your data stays
-          yours
-        </div>
       </section>
     </main>
   );

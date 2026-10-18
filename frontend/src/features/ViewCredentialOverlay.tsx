@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { SubmitEvent } from "react";
-import { generatePassword } from "../api";
 import { Icon } from "../components/Icon";
-import type { VaultItem } from "./types";
+import type { VaultItem } from "../utils/types";
 import { DeleteConfirmation } from "./DeleteConfirmation";
+import { generatePassword } from "../api/password";
 
 export function ViewCredentialOverlay({
   item,
@@ -35,7 +35,6 @@ export function ViewCredentialOverlay({
     setGenerationError("");
     try {
       const result = await generatePassword(
-        localStorage.getItem("token") ?? "",
         profile,
         profile === "Strong" ? length : undefined,
       );

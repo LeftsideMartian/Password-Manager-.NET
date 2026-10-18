@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { SubmitEvent } from "react";
-import { generatePassword } from "../api";
 import { Icon } from "../components/Icon";
+import { generatePassword } from "../api/password";
 
 export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
   const [site, setSite] = useState("");
@@ -20,7 +20,6 @@ export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
     setGenerationError("");
     try {
       const result = await generatePassword(
-        localStorage.getItem("token") ?? "",
         profile,
         profile === "Strong" ? length : undefined,
       );

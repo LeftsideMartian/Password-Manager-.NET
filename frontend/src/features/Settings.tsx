@@ -1,6 +1,14 @@
+import { useState } from "react";
 import { Icon } from "../components/Icon";
+import { useUser } from "../context/UserContext";
+import type { User } from "../utils/types";
 
-export function Settings({ email }: { email: string }) {
+export function Settings() {
+  const { user } = useUser();
+  const [newUserDetails, setNewUserDetails] = useState<User>(
+    user ?? ({} as User),
+  );
+
   return (
     <div className="settings-view">
       <section className="welcome-row">
@@ -14,6 +22,7 @@ export function Settings({ email }: { email: string }) {
           </p>
         </div>
       </section>
+
       <section className="settings-card">
         <div className="settings-section">
           <div className="settings-heading">
@@ -25,12 +34,58 @@ export function Settings({ email }: { email: string }) {
               <p>Update the details associated with your account.</p>
             </div>
           </div>
-          <label>Email address</label>
-          <input type="email" value={email} readOnly />
+
+          <div className="settings-field">
+            <label htmlFor="first-name">First Name</label>
+            <input
+              id="first-name"
+              type="text"
+              value={newUserDetails.firstName}
+              onChange={(event) =>
+                setNewUserDetails((current) => ({
+                  ...current,
+                  firstName: event.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="last-name">Last Name</label>
+            <input
+              id="last-name"
+              type="text"
+              value={newUserDetails.lastName}
+              onChange={(event) =>
+                setNewUserDetails((current) => ({
+                  ...current,
+                  lastName: event.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div className="settings-field">
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              type="email"
+              value={newUserDetails.email}
+              onChange={(event) => {
+                setNewUserDetails((current) => ({
+                  ...current,
+                  email: event.target.value,
+                }));
+              }}
+              readOnly
+            />
+          </div>
+
           {/* TODO(frontend-backend): Submit profile changes to the account
               endpoint and show success or validation feedback. */}
           <button className="secondary-button">Save changes</button>
         </div>
+
         <div className="settings-section">
           <div className="settings-heading">
             <span className="settings-icon">
@@ -41,6 +96,7 @@ export function Settings({ email }: { email: string }) {
               <p>Keep your vault protected with these controls.</p>
             </div>
           </div>
+
           <button className="settings-row">
             {/* TODO(frontend-backend): Open the master-password change flow
                 and submit the update through the account API. */}
@@ -50,7 +106,8 @@ export function Settings({ email }: { email: string }) {
             </span>
             <Icon name="chevron" size={17} />
           </button>
-          <button className="settings-row">
+
+          <button className="settings-row" style={{ cursor: "default" }}>
             {/* TODO(frontend-backend): Replace this placeholder state with
                 the user's 2FA status and connect the setup flow. */}
             <span>
