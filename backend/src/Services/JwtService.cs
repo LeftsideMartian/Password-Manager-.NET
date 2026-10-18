@@ -20,14 +20,12 @@ public class JwtService(IUserRepository userRepo, IConfiguration config) : IJwtS
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             throw new ArgumentNullException();
 
-        if (!userRepo.DoesUserExist(request.Email))
-        {
-            throw new AuthenticationException();
-        }
+        var user = userRepo.GetByEmail(request.Email)
+            ?? throw new AuthenticationException();
 
         var issuer = config["JwtSettings:Issuer"];
         var audience = config["JwtSettings:Audience"];
-        var tokenLifetime = config.GetValue<int>("JwtConfig:TokenLifetime");
+        var tokenLifetime = config.GetValue<int>("JwtSettings:TokenLifetime");
         var key = config["JwtSettings:Key"] ?? throw new InvalidOperationException("Missing Jwt Key");
         
         var tokenExpiryTimeStamp = DateTime.UtcNow.AddMinutes(tokenLifetime);
@@ -47,7 +45,7 @@ public class JwtService(IUserRepository userRepo, IConfiguration config) : IJwtS
         var securityToken = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
         var accessToken = tokenHandler.WriteToken(securityToken);
 
-        return new LoginResponse(request.Email, accessToken,
+        return new LoginResponse(user.Email, user.FirstName, accessToken,
             (int)tokenExpiryTimeStamp.Subtract(DateTime.UtcNow).TotalSeconds);
     }
 }

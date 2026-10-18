@@ -4,3 +4,5 @@
 bin
 obj
 backend/src/Migrations/**
+backend/src/netpass.db-shm
+backend/src/netpass.db-wal

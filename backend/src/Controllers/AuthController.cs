@@ -8,7 +8,7 @@ namespace NetPass.Controllers;
 
 [Controller]
 [Authorize]
-[Route("/auth")]
+[Route("/login")]
 public class AuthController(IJwtService jwtService) : ControllerBase
 {
     [AllowAnonymous]

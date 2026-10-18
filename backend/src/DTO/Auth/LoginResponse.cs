@@ -1,3 +1,3 @@
 namespace NetPass.DTO.Auth;
 
-public record LoginResponse(string Email, string Token, int ExpiresIn);
+public record LoginResponse(string Email, string FirstName, string Token, int ExpiresIn);

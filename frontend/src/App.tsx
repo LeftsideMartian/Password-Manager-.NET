@@ -1,7 +1,34 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { generatePassword, login } from "./api";
+import { useEffect, useState } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
+import {
+  createCredential,
+  generatePassword,
+  getCredentials,
+  login,
+} from "./api";
+import type { Credential as ApiCredential } from "./api";
 import "./App.css";
+
+type VaultCredential = ApiCredential & {
+  title: string;
+  color: string;
+  initials: string;
+};
+function toVaultCredential(credential: ApiCredential): VaultCredential {
+  const initials = credential.name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+
+  return {
+    ...credential,
+    title: credential.name,
+    initials,
+    color: "orange",
+  };
+}
 
 type View = "overview" | "vault" | "generator" | "settings";
 
@@ -65,40 +92,11 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   );
 }
 
-// TODO(frontend-backend): Replace the demo credentials with the authenticated
-// user's vault returned by the backend.
-const vaultItems = [
-  {
-    title: "GitHub",
-    username: "michael.lunn",
-    category: "Development",
-    color: "orange",
-    initials: "GH",
-  },
-  {
-    title: "Netflix",
-    username: "michael@example.com",
-    category: "Entertainment",
-    color: "red",
-    initials: "N",
-  },
-  {
-    title: "AWS Console",
-    username: "michael.lunn",
-    category: "Development",
-    color: "yellow",
-    initials: "AWS",
-  },
-  {
-    title: "Personal email",
-    username: "michael@example.com",
-    category: "Personal",
-    color: "blue",
-    initials: "M",
-  },
-];
-
-function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
+function LoginScreen({
+  onLogin,
+}: {
+  onLogin: (email: string, firstName: string) => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -112,7 +110,9 @@ function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
     try {
       const session = await login(email, password);
       localStorage.setItem("token", session.token);
-      onLogin(session.email);
+      localStorage.setItem("userEmail", session.email);
+      localStorage.setItem("userFirstName", session.firstName);
+      onLogin(session.email, session.firstName);
     } catch {
       setError("We could not sign you in. Check your details and try again.");
     } finally {
@@ -199,7 +199,7 @@ function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
           <button
             type="button"
             className="preview-button"
-            onClick={() => onLogin("demo@example.com")}
+            onClick={() => onLogin("demo@example.com", "Demo")}
           >
             Preview the app <Icon name="arrow" size={14} />
           </button>
@@ -214,16 +214,56 @@ function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
 }
 
 function App() {
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(() =>
+    localStorage.getItem("token") && localStorage.getItem("userEmail")
+      ? localStorage.getItem("userEmail")
+      : null,
+  );
+  const [firstName, setFirstName] = useState<string>(() => {
+    const storedFirstName = localStorage.getItem("userFirstName");
+    if (storedFirstName) return storedFirstName;
+
+    const storedEmail = localStorage.getItem("userEmail") ?? "";
+    return storedEmail.split("@")[0].split(/[._-]/)[0];
+  });
+  const [credentials, setCredentials] = useState<VaultCredential[]>([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsError, setCredentialsError] = useState("");
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
 
-  if (!userEmail) return <LoginScreen onLogin={setUserEmail} />;
+  useEffect(() => {
+    if (!userEmail) return;
 
-  const firstName = userEmail.split("@")[0].split(/[._-]/)[0];
+    setCredentialsLoading(true);
+    setCredentialsError("");
+    getCredentials()
+      .then((items) => setCredentials(items.map(toVaultCredential)))
+      .catch((error) =>
+        setCredentialsError(
+          error instanceof Error
+            ? error.message
+            : "Could not load credentials.",
+        ),
+      )
+      .finally(() => setCredentialsLoading(false));
+  }, [userEmail]);
+
+  if (!userEmail) {
+    return (
+      <LoginScreen
+        onLogin={(email, name) => {
+          setUserEmail(email);
+          setFirstName(name);
+        }}
+      />
+    );
+  }
 
   function signOut() {
     localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userFirstName");
     setUserEmail(null);
   }
 
@@ -345,9 +385,22 @@ function App() {
         </header>
         <div className="page-content">
           {view === "overview" && (
-            <Overview firstName={firstName} setView={setView} />
+            <Overview
+              firstName={firstName}
+              setView={setView}
+              credentials={credentials}
+              loading={credentialsLoading}
+              error={credentialsError}
+            />
           )}
-          {view === "vault" && <Vault />}
+          {view === "vault" && (
+            <Vault
+              credentials={credentials}
+              setCredentials={setCredentials}
+              loading={credentialsLoading}
+              error={credentialsError}
+            />
+          )}
           {view === "generator" && <Generator />}
           {view === "settings" && <Settings email={userEmail} />}
         </div>
@@ -384,21 +437,32 @@ function NavButton({
 function Overview({
   firstName,
   setView,
+  credentials,
+  loading,
+  error,
 }: {
   firstName: string;
   setView: (view: View) => void;
+  credentials: VaultCredential[];
+  loading: boolean;
+  error: string;
 }) {
   const [selectedCredential, setSelectedCredential] = useState<
-    (typeof vaultItems)[number] | null
+    VaultCredential | null
   >(null);
 
   return (
     <div className="overview">
       <section className="welcome-row">
         <div>
-          {/* TODO: Use the current date or the user's
-              locale-aware activity date instead of this demo date. */}
-          <p className="eyebrow">Wednesday, October 14, 2026</p>
+          <p className="eyebrow">
+            {new Intl.DateTimeFormat(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }).format(new Date())}
+          </p>
           <h1>
             Good evening, <em>{firstName}.</em>
           </h1>
@@ -411,13 +475,11 @@ function Overview({
         </button>
       </section>
       <section className="stats-grid">
-        {/* TODO: Replace these demo values with vault
-            statistics and the latest security-check result from the backend. */}
         <Stat
           icon="key"
           label="Saved passwords"
-          value="12"
-          trend="+2 this month"
+          value={loading ? "…" : String(credentials.length)}
+          trend="Stored securely"
         />
         <Stat
           icon="shield"
@@ -479,15 +541,18 @@ function Overview({
           </button>
         </div>
         <div className="credential-list">
-          {/* TODO: Render the user's latest credentials,
-              ordered by the backend's saved/updated timestamp. */}
-          {vaultItems.slice(0, 3).map((item) => (
+          {loading && <div className="empty-state">Loading credentials…</div>}
+          {error && <div className="empty-state">{error}</div>}
+          {!loading && !error && credentials.slice(0, 3).map((item) => (
             <Credential
               item={item}
-              key={item.title}
+              key={item.credentialId}
               onOpen={() => setSelectedCredential(item)}
             />
           ))}
+          {!loading && !error && credentials.length === 0 && (
+            <div className="empty-state">No credentials saved yet.</div>
+          )}
         </div>
       </section>
       {selectedCredential && (
@@ -532,7 +597,7 @@ function Credential({
   item,
   onOpen,
 }: {
-  item: (typeof vaultItems)[number];
+  item: VaultCredential;
   onOpen?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -580,15 +645,22 @@ function Credential({
   );
 }
 
-function Vault() {
+function Vault({
+  credentials,
+  setCredentials,
+  loading,
+  error,
+}: {
+  credentials: VaultCredential[];
+  setCredentials: Dispatch<SetStateAction<VaultCredential[]>>;
+  loading: boolean;
+  error: string;
+}) {
   const [search, setSearch] = useState("");
   const [showAddOverlay, setShowAddOverlay] = useState(false);
-  // TODO: Load credentials for the authenticated user and
-  // keep this list in sync after create, update, and delete requests.
-  const [credentials, setCredentials] = useState(vaultItems);
   const [category, setCategory] = useState("All");
   const [selectedCredential, setSelectedCredential] = useState<
-    (typeof vaultItems)[number] | null
+    VaultCredential | null
   >(null);
   const filtered = credentials.filter((item) =>
     (category === "All" || item.category === category) &&
@@ -597,6 +669,7 @@ function Vault() {
       .includes(search.toLowerCase()),
   );
   const categories = ["All", ...new Set(credentials.map((item) => item.category))];
+
   return (
     <div className="vault-view">
       <section className="welcome-row">
@@ -639,10 +712,12 @@ function Vault() {
         </select>
       </div>
       <div className="vault-list">
+        {loading && <div className="empty-state">Loading credentials…</div>}
+        {error && <div className="empty-state">{error}</div>}
         {filtered.map((item) => (
           <Credential
             item={item}
-            key={item.title}
+            key={item.credentialId}
             onOpen={() => setSelectedCredential(item)}
           />
         ))}
@@ -651,7 +726,12 @@ function Vault() {
         )}
       </div>
       {showAddOverlay && (
-        <AddCredentialOverlay onClose={() => setShowAddOverlay(false)} />
+        <AddCredentialOverlay
+        onCreated={(credential) =>
+          setCredentials((current) => [toVaultCredential(credential), ...current])
+        }
+          onClose={() => setShowAddOverlay(false)}
+        />
       )}
       {selectedCredential && (
         <ViewCredentialOverlay
@@ -662,7 +742,8 @@ function Vault() {
             // and remove it from local state only after success.
             setCredentials((current) =>
               current.filter(
-                (credential) => credential.title !== selectedCredential.title,
+                (credential) =>
+                  credential.credentialId !== selectedCredential.credentialId,
               ),
             );
             setSelectedCredential(null);
@@ -673,7 +754,13 @@ function Vault() {
   );
 }
 
-function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
+function AddCredentialOverlay({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (credential: ApiCredential) => void;
+}) {
   const [site, setSite] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -684,6 +771,8 @@ function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
   const [length, setLength] = useState(20);
   const [loading, setLoading] = useState(false);
   const [generationError, setGenerationError] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
 
   async function createPassword() {
     setLoading(true);
@@ -706,11 +795,25 @@ function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    // TODO: Persist the new credential before closing the
-    // dialog, then refresh the vault list from the backend.
-    onClose();
+    setLoading(true);
+    setError("");
+    try {
+      const credential = await createCredential({
+        name: site,
+        username,
+        password,
+        category,
+        note,
+      });
+      onCreated(credential);
+      onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not save credential.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -869,14 +972,17 @@ function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
                 id="notes"
                 placeholder="Add a note about this login"
                 rows={3}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
               />
             </div>
           </div>
+          {error && <p className="form-error">{error}</p>}
           <footer className="overlay-footer">
             <button type="button" className="cancel-button" onClick={onClose}>
               Cancel
             </button>
-            <button className="primary-button" type="submit">
+            <button className="primary-button" type="submit" disabled={loading}>
               <Icon name="lock" size={15} /> Save credential
             </button>
           </footer>
@@ -891,7 +997,7 @@ function ViewCredentialOverlay({
   onClose,
   onDeleted,
 }: {
-  item: (typeof vaultItems)[number];
+  item: VaultCredential;
   onClose: () => void;
   onDeleted: () => void;
 }) {
