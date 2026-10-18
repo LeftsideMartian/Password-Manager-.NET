@@ -77,8 +77,7 @@ public sealed class PasswordGeneratorService : IPasswordGeneratorService
 
         return new GeneratePasswordResponse(
             password,
-            isEasyToType ? "EasyToType" : "Strong",
-            password.Length);
+            isEasyToType ? "EasyToType" : "Strong");
     }
 
     private static string GenerateStrongPassword(int length)

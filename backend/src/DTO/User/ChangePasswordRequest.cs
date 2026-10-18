@@ -1,3 +1,3 @@
 namespace NetPass.DTO;
 
-public record ChangePasswordRequest();
+public record ChangePasswordRequest(string newPassword);

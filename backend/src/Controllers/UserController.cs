@@ -12,9 +12,9 @@ namespace NetPass.Controllers;
 public class UserController(IUserService userService) : ControllerBase
 {
     [HttpPost]
-    public IActionResult Create([FromBody] CreateUserRequest request)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
     {
-        UserDto newUser = userService.CreateUser(request);
+        UserDto newUser = await userService.CreateUserAsync(request);
 
         return CreatedAtAction(nameof(GetById), new { id = newUser.UserId }, newUser);
     }
@@ -28,24 +28,24 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpPost("/user/{id}/password")]
-    public IActionResult ChangePassword([FromBody] ChangePasswordRequest request, [FromRoute] int userId)
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, [FromRoute] int userId)
     {
-        userService.ChangeUserPassword(request, userId);
+        await userService.ChangeUserPasswordAsync(request, userId);
         // Handle not found response if user does not exist
         return Ok();
     }
     
     [HttpPost("/user/{id}")]
-    public IActionResult UpdateDetails([FromBody] UpdateUserRequest request, [FromRoute] int userId)
+    public async Task<IActionResult> UpdateDetails([FromBody] UpdateUserRequest request, [FromRoute] int userId)
     {
-        userService.UpdateUserDetails(request, userId);
+        await userService.UpdateUserDetailsAsync(request, userId);
         return Ok();
     }
     
     [HttpDelete("/user/{id}")]
-    public IActionResult DeleteUser([FromRoute] int userId)
+    public async Task<IActionResult> DeleteUser([FromRoute] int userId)
     {
-        userService.DeleteUser(userId);
+        await userService.DeleteUserAsync(userId);
         return Ok();
     }
 }
