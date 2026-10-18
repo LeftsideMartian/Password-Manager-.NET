@@ -7,15 +7,15 @@ namespace NetPass.Services;
 
 public interface IUserService
 {
-    UserDto CreateUser(CreateUserRequest request);
-    void ChangeUserPassword(ChangePasswordRequest request, int userId);
-    void UpdateUserDetails(UpdateUserRequest request, int userId);
-    void DeleteUser(int userId);
+    Task<UserDto> CreateUserAsync(CreateUserRequest request);
+    Task ChangeUserPasswordAsync(ChangePasswordRequest request, int userId);
+    Task UpdateUserDetailsAsync(UpdateUserRequest request, int userId);
+    Task DeleteUserAsync(int userId);
 }
 
 public class UserService(IUserRepository userRepository) : IUserService
 {
-    public UserDto CreateUser(CreateUserRequest request)
+    public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
     {
         User newUser = new User
         {
@@ -24,25 +24,35 @@ public class UserService(IUserRepository userRepository) : IUserService
             Email = request.Email,
             Password = request.Password
         };
-        
-        // Return new user must have id filled out
-        userRepository.Create(newUser);
+
+        // UserId is automatically filled in by repository
+        await userRepository.CreateAsync(newUser);
 
         return new UserDto(newUser);
     }
 
-    public void ChangeUserPassword(ChangePasswordRequest request, int userId)
+    public async Task ChangeUserPasswordAsync(ChangePasswordRequest request, int userId)
     {
-        throw new NotImplementedException();
+        var user = await userRepository.FindUserAsync(userId);
+        if (user is null) throw new InvalidOperationException();
+
+        user.Password = request.newPassword;
+
+        await userRepository.UpdateAsync(user);
     }
 
-    public void UpdateUserDetails(UpdateUserRequest request, int userId)
+    public async Task UpdateUserDetailsAsync(UpdateUserRequest request, int userId)
     {
-        throw new NotImplementedException();
+        var user = await userRepository.FindUserAsync(userId);
+        if (user is null) throw new InvalidOperationException();
+
+        user.FirstName = request.FirstName ?? user.FirstName;
+        user.LastName = request.LastName ?? user.LastName;
+        user.Email = request.Email ?? user.Email;
+
+        await userRepository.UpdateAsync(user);
     }
 
-    public void DeleteUser(int userId)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task DeleteUserAsync(int userId)
+        => await userRepository.DeleteAsync(userId);
 }
