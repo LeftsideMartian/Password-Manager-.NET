@@ -11,6 +11,7 @@ namespace NetPass.Controllers;
 [Route("/user")]
 public class UserController(IUserService userService) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
     {
@@ -19,7 +20,7 @@ public class UserController(IUserService userService) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = newUser.UserId }, newUser);
     }
 
-    [HttpGet("/user/{id:int}")]
+    [HttpGet("{id:int}")]
     public IActionResult GetById([FromRoute] int id)
     {
         // var user = appDb.Users.Find(id);
@@ -27,7 +28,7 @@ public class UserController(IUserService userService) : ControllerBase
         throw new NotImplementedException();
     }
 
-    [HttpPost("/user/{id}/password")]
+    [HttpPost("{userId:int}/password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, [FromRoute] int userId)
     {
         await userService.ChangeUserPasswordAsync(request, userId);
@@ -35,14 +36,14 @@ public class UserController(IUserService userService) : ControllerBase
         return Ok();
     }
     
-    [HttpPost("/user/{id}")]
+    [HttpPost("{userId:int}")]
     public async Task<IActionResult> UpdateDetails([FromBody] UpdateUserRequest request, [FromRoute] int userId)
     {
         await userService.UpdateUserDetailsAsync(request, userId);
         return Ok();
     }
     
-    [HttpDelete("/user/{id}")]
+    [HttpDelete("{userId:int}")]
     public async Task<IActionResult> DeleteUser([FromRoute] int userId)
     {
         await userService.DeleteUserAsync(userId);
