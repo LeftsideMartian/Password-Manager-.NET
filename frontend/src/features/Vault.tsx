@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Icon } from "../components/Icon";
-import { vaultItems } from "../utils/vaultData";
 import type { VaultItem } from "../utils/types";
 import { Credential } from "../components/Credential";
 import { AddCredentialOverlay } from "./AddCredentialOverlay";
@@ -11,7 +10,7 @@ export function Vault() {
   const [showAddOverlay, setShowAddOverlay] = useState(false);
   // TODO: Load credentials for the authenticated user and
   // keep this list in sync after create, update, and delete requests.
-  const [credentials, setCredentials] = useState<VaultItem[]>([...vaultItems]);
+  const [credentials, setCredentials] = useState<VaultItem[]>([]);
   const [category, setCategory] = useState("All");
   const [selectedCredential, setSelectedCredential] =
     useState<VaultItem | null>(null);
@@ -34,9 +33,7 @@ export function Vault() {
       <section className="welcome-row">
         <div>
           <p className="eyebrow">Your secure collection</p>
-          <h1>
-            My <em>vault.</em>
-          </h1>
+          <h1>My vault.</h1>
           <p className="page-subtitle">
             {credentials.length} credentials protected by NetPass.
           </p>
