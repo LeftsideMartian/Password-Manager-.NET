@@ -31,6 +31,16 @@ export function toVaultItem(credential: CredentialResponse): VaultItem {
         initials: "CC",
         credential,
       };
+    default:
+      // Never crash the page on an unexpected response shape.
+      return {
+        title: "Credential",
+        username: "",
+        category: "Other",
+        color: "blue",
+        initials: "?",
+        credential,
+      };
   }
 }
 

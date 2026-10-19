@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "./components/Icon";
 import { Generator } from "./features/Generator";
 import { LoginScreen } from "./features/LoginScreen";
@@ -10,6 +10,7 @@ import type { View } from "./utils/types";
 import "./App.css";
 import { NavButton } from "./components/NavButton";
 import { useUser } from "./context/UserContext";
+import { getCredentials } from "./api/credentials";
 
 type NavItem = {
   view: View;
@@ -24,7 +25,6 @@ const navItems: NavItem[] = [
     view: "vault",
     icon: "key",
     label: "My vault",
-    badge: "12",
   },
   {
     view: "generator",
@@ -37,6 +37,20 @@ function App() {
   const { user, signOut } = useUser();
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
+  // Number of credentials in the vault, shown as the badge on "My vault".
+  // null until it has been loaded, so no badge shows while loading.
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
+
+  // Load the count whenever a user logs in.
+  useEffect(() => {
+    if (!user) {
+      setCredentialCount(null);
+      return;
+    }
+    getCredentials()
+      .then((credentials) => setCredentialCount(credentials.length))
+      .catch(() => setCredentialCount(null));
+  }, [user]);
 
   if (!user) return <LoginScreen />;
 
@@ -56,6 +70,11 @@ function App() {
             <NavButton
               key={navView}
               {...buttonProps}
+              badge={
+                navView === "vault" && credentialCount !== null
+                  ? String(credentialCount)
+                  : undefined
+              }
               active={view === navView}
               onClick={() => {
                 setView(navView);
@@ -104,8 +123,8 @@ function App() {
 
       <main className="main-content">
         <div className="page-content">
-          {view === "overview" && <Overview setView={setView} />}
-          {view === "vault" && <Vault />}
+          {view === "overview" && <Overview setView={setView} onCountChange={setCredentialCount} />}
+          {view === "vault" && <Vault onCountChange={setCredentialCount} />}
           {view === "generator" && <Generator />}
           {view === "settings" && <Settings />}
         </div>

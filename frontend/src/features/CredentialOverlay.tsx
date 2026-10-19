@@ -122,7 +122,9 @@ export function CredentialOverlay({
     setError("");
     try {
       const saved = await save();
-      onSaved(saved);
+      // The backend omits the "type" field on create/update responses,
+      // so add back the type we already know before using the result.
+      onSaved({ ...saved, type } as CredentialResponse);
     } catch (err) {
       // A 400 here usually means the backend validation rejected a field,
       // for example a card number that fails the [CreditCard] check.

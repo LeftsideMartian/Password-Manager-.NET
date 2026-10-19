@@ -6,7 +6,11 @@ import { CredentialOverlay } from "./CredentialOverlay";
 import { getCredentials } from "../api/credentials";
 import { toVaultItem } from "../utils/credentialDisplay";
 
-export function Vault() {
+export function Vault({
+  onCountChange,
+}: {
+  onCountChange?: (count: number) => void;
+}) {
   const [search, setSearch] = useState("");
   const [showAddOverlay, setShowAddOverlay] = useState(false);
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
@@ -26,6 +30,11 @@ export function Vault() {
         ),
       );
   }, []);
+
+  // Keep the sidebar badge in step after every add or delete.
+  useEffect(() => {
+    onCountChange?.(credentials.length);
+  }, [credentials, onCountChange]);
 
   // Replace the saved credential if it is already in the list, otherwise add it.
   function upsert(saved: CredentialResponse) {

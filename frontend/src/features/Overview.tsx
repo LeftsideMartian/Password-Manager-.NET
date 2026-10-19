@@ -8,7 +8,13 @@ import { CredentialOverlay } from "./CredentialOverlay";
 import { getCredentials } from "../api/credentials";
 import { toVaultItem } from "../utils/credentialDisplay";
 
-export function Overview({ setView }: { setView: (view: View) => void }) {
+export function Overview({
+  setView,
+  onCountChange,
+}: {
+  setView: (view: View) => void;
+  onCountChange?: (count: number) => void;
+}) {
   const { user } = useUser();
   const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [selectedCredential, setSelectedCredential] =
@@ -17,6 +23,10 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
   useEffect(() => {
     getCredentials().then(setCredentials).catch(() => setCredentials([]));
   }, []);
+
+  useEffect(() => {
+    onCountChange?.(credentials.length);
+  }, [credentials, onCountChange]);
 
   // Newest first: a higher id means it was created later.
   const recent = [...credentials]
