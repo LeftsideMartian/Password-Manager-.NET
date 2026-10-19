@@ -29,7 +29,7 @@ cd Password-Manager-.NET
 
 ```
 cd backend/src
-dotnet ef migrations add Initial
+dotnet restore
 dotnet ef database update
 ```
 
