@@ -1013,9 +1013,16 @@ button {
   font-size: 11px;
   font-weight: 650;
 }
+.auth-form {
+  display: grid;
+  gap: 19px;
+}
 .label-row {
   align-items: center;
-  margin-top: 19px;
+  margin-top: 0;
+}
+.auth-field .label-row {
+  margin-bottom: 8px;
 }
 .label-row label {
   margin: 0;
