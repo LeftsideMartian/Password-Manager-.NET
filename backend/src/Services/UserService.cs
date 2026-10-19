@@ -13,16 +13,17 @@ public interface IUserService
     Task DeleteUserAsync(int userId);
 }
 
-public class UserService(IUserRepository userRepository) : IUserService
+public class UserService(IUserRepository userRepository, IEncryptionService encryptionService) : IUserService
 {
     public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
     {
+        string encryptedPassword = encryptionService.EncryptString(request.Password);
         User newUser = new User
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            Password = request.Password
+            Password = encryptedPassword
         };
 
         // UserId is automatically filled in by repository
@@ -36,7 +37,7 @@ public class UserService(IUserRepository userRepository) : IUserService
         var user = await userRepository.FindUserAsync(userId);
         if (user is null) throw new InvalidOperationException();
 
-        user.Password = request.newPassword;
+        user.Password = encryptionService.EncryptString(request.newPassword);
 
         await userRepository.UpdateAsync(user);
     }
