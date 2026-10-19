@@ -1,24 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
-import { vaultItems as sharedVaultItems } from "../utils/vaultData";
-import type { View, VaultItem } from "../utils/types";
+import type { CredentialResponse, View } from "../utils/types";
 import { useUser } from "../context/UserContext";
 import { Credential } from "../components/Credential";
 import { Stat } from "./Stat";
-import { ViewCredentialOverlay } from "./ViewCredentialOverlay";
+import { CredentialOverlay } from "./CredentialOverlay";
+import { getCredentials } from "../api/credentials";
+import { toVaultItem } from "../utils/credentialDisplay";
 
 export function Overview({ setView }: { setView: (view: View) => void }) {
   const { user } = useUser();
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
   const [selectedCredential, setSelectedCredential] =
-    useState<VaultItem | null>(null);
+    useState<CredentialResponse | null>(null);
+
+  useEffect(() => {
+    getCredentials().then(setCredentials).catch(() => setCredentials([]));
+  }, []);
+
+  // Newest first: a higher id means it was created later.
+  const recent = [...credentials]
+    .sort((a, b) => b.credentialId - a.credentialId)
+    .slice(0, 3);
 
   return (
     <div className="overview">
       <section className="welcome-row">
         <div>
-          {/* TODO: Use the current date or the user's
-              locale-aware activity date instead of this demo date. */}
-          <p className="eyebrow">Wednesday, October 14, 2026</p>
+          <p className="eyebrow">
+            {new Date().toLocaleDateString(undefined, {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
           <h1>
             Good evening, <em>{user?.firstName}.</em>
           </h1>
@@ -35,9 +51,9 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
             statistics and the latest security-check result from the backend. */}
         <Stat
           icon="key"
-          label="Saved passwords"
-          value="12"
-          trend="+2 this month"
+          label="Saved credentials"
+          value={String(credentials.length)}
+          trend="Stored encrypted"
         />
         <Stat
           icon="shield"
@@ -99,22 +115,37 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
           </button>
         </div>
         <div className="credential-list">
-          {/* TODO: Render the user's latest credentials,
-              ordered by the backend's saved/updated timestamp. */}
-          {sharedVaultItems.slice(0, 3).map((item) => (
+          {recent.map((credential) => (
             <Credential
-              item={item}
-              key={item.title}
-              onOpen={() => setSelectedCredential(item)}
+              item={toVaultItem(credential)}
+              key={credential.credentialId}
+              onOpen={() => setSelectedCredential(credential)}
             />
           ))}
+          {recent.length === 0 && (
+            <div className="empty-state">No credentials saved yet.</div>
+          )}
         </div>
       </section>
       {selectedCredential && (
-        <ViewCredentialOverlay
-          item={selectedCredential}
+        <CredentialOverlay
+          key={selectedCredential.credentialId}
+          existing={selectedCredential}
           onClose={() => setSelectedCredential(null)}
-          onDeleted={() => setSelectedCredential(null)}
+          onSaved={(saved) => {
+            setCredentials((current) =>
+              current.map((c) =>
+                c.credentialId === saved.credentialId ? saved : c,
+              ),
+            );
+            setSelectedCredential(null);
+          }}
+          onDeleted={(credentialId) => {
+            setCredentials((current) =>
+              current.filter((c) => c.credentialId !== credentialId),
+            );
+            setSelectedCredential(null);
+          }}
         />
       )}
     </div>

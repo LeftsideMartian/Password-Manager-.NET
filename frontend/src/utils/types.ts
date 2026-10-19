@@ -5,6 +5,8 @@ export type VaultItem = {
   category: string;
   color: string;
   initials: string;
+  // The real credential from the backend. Demo items do not have one.
+  credential?: CredentialResponse;
 };
 
 export interface User {
