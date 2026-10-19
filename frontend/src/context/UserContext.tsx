@@ -11,6 +11,7 @@ import {
   getAuthSession,
   getStoredUser,
   storeAuthSession,
+  storeUser,
 } from "../utils/utils";
 
 function getValidStoredSession(): AuthSession | null {
@@ -28,6 +29,7 @@ type UserContextValue = {
   user: User | null;
   authSession: AuthSession | null;
   signIn: (response: LoginResponse) => void;
+  updateUser: (user: User) => void;
   signOut: () => void;
 };
 
@@ -59,6 +61,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  function updateUser(nextUser: User) {
+    storeUser(nextUser);
+    setUser(nextUser);
+  }
+
   useEffect(() => {
     if (!authSession) return;
 
@@ -76,7 +83,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [authSession]);
 
   return (
-    <UserContext.Provider value={{ user, authSession, signIn, signOut }}>
+    <UserContext.Provider
+      value={{ user, authSession, signIn, updateUser, signOut }}
+    >
       {children}
     </UserContext.Provider>
   );

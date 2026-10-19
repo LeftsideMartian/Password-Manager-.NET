@@ -37,6 +37,16 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface ChangePasswordRequest {
+  newPassword: string;
+}
+
+export interface UpdateUserRequest {
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
 export interface GeneratePasswordRequest {
   profile?: string;
   length?: number;

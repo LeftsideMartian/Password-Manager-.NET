@@ -1,13 +1,75 @@
-import { useState } from "react";
+import { useState, type SubmitEvent } from "react";
 import { Icon } from "../components/Icon";
 import { useUser } from "../context/UserContext";
-import type { User } from "../utils/types";
+import { changePassword, updateUser as updateUserRequest } from "../api/user";
+import type { UpdateUserRequest, User } from "../utils/types";
 
 export function Settings() {
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const [newUserDetails, setNewUserDetails] = useState<User>(
     user ?? ({} as User),
   );
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  async function saveProfile() {
+    if (!user) return;
+
+    const request: UpdateUserRequest = {
+      firstName: newUserDetails.firstName,
+      lastName: newUserDetails.lastName,
+      email: newUserDetails.email,
+    };
+
+    setProfileError("");
+    setProfileSuccess("");
+    setProfileLoading(true);
+
+    try {
+      await updateUserRequest(user.userId, request);
+      updateUser(newUserDetails);
+      setProfileSuccess("Profile updated successfully.");
+    } catch {
+      setProfileError("We could not update your profile. Please try again.");
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  async function savePassword(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!user) return;
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setPasswordError("");
+    setPasswordSuccess("");
+    setPasswordLoading(true);
+
+    try {
+      await changePassword(user.userId, { newPassword });
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess("Master password updated successfully.");
+    } catch {
+      setPasswordError(
+        "We could not update your master password. Please try again.",
+      );
+    } finally {
+      setPasswordLoading(false);
+    }
+  }
 
   return (
     <div className="settings-view">
@@ -77,13 +139,21 @@ export function Settings() {
                   email: event.target.value,
                 }));
               }}
-              readOnly
             />
           </div>
 
-          {/* TODO(frontend-backend): Submit profile changes to the account
-              endpoint and show success or validation feedback. */}
-          <button className="secondary-button">Save changes</button>
+          {profileError && <p className="form-error">{profileError}</p>}
+          {profileSuccess && (
+            <p className="settings-success">{profileSuccess}</p>
+          )}
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={saveProfile}
+            disabled={profileLoading}
+          >
+            {profileLoading ? "Saving…" : "Save changes"}
+          </button>
         </div>
 
         <div className="settings-section">
@@ -97,15 +167,60 @@ export function Settings() {
             </div>
           </div>
 
-          <button className="settings-row">
-            {/* TODO(frontend-backend): Open the master-password change flow
-                and submit the update through the account API. */}
+          <button
+            className="settings-row"
+            type="button"
+            onClick={() => {
+              setShowPasswordForm((current) => !current);
+              setPasswordError("");
+              setPasswordSuccess("");
+            }}
+          >
             <span>
               <strong>Change master password</strong>
               <small>Update the password used to unlock your vault</small>
             </span>
             <Icon name="chevron" size={17} />
           </button>
+          {showPasswordForm && (
+            <form className="settings-password-form" onSubmit={savePassword}>
+              <div className="settings-field">
+                <label htmlFor="new-password">New master password</label>
+                <input
+                  id="new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  required
+                />
+              </div>
+              <div className="settings-field">
+                <label htmlFor="confirm-password">
+                  Confirm master password
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                />
+              </div>
+              {passwordError && <p className="form-error">{passwordError}</p>}
+              {passwordSuccess && (
+                <p className="settings-success">{passwordSuccess}</p>
+              )}
+              <button
+                className="secondary-button"
+                type="submit"
+                disabled={passwordLoading}
+              >
+                {passwordLoading ? "Updating…" : "Update password"}
+              </button>
+            </form>
+          )}
 
           <button className="settings-row" style={{ cursor: "default" }}>
             {/* TODO(frontend-backend): Replace this placeholder state with

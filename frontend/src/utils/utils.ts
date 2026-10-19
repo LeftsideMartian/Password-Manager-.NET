@@ -29,6 +29,10 @@ export function getStoredUser(): User | null {
   }
 }
 
+export function storeUser(user: User) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
 export function clearAuthSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

@@ -21,7 +21,9 @@ async function apiFetch<T>(
 
   if (response.status === 204) return undefined as T;
 
-  return response.json() as Promise<T>;
+  const responseBody = await response.text();
+
+  return responseBody ? (JSON.parse(responseBody) as T) : (undefined as T);
 }
 
 export function apiGet<T>(path: string) {
