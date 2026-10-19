@@ -13,7 +13,7 @@ public interface IJwtService
     Task<LoginResponse> AuthenticateAsync(LoginRequest request);
 }
 
-public class JwtService(IUserRepository userRepo, IConfiguration config) : IJwtService
+public class JwtService(IUserRepository userRepo, IConfiguration config, IEncryptionService encryptionService) : IJwtService
 {
     public async Task<LoginResponse> AuthenticateAsync(LoginRequest request)
     {
@@ -23,6 +23,11 @@ public class JwtService(IUserRepository userRepo, IConfiguration config) : IJwtS
         var user = await userRepo.FindUserAsync(request.Email);
 
         if (user is null) throw new AuthenticationException();
+        
+        bool isEmailValid = user.Email == request.Email;
+        bool isPasswordValid = encryptionService.DecryptString(user.Password) == request.Password; 
+        
+        if (!isEmailValid || !isPasswordValid) throw new AuthenticationException();
 
         var issuer = config["JwtSettings:Issuer"];
         var audience = config["JwtSettings:Audience"];
