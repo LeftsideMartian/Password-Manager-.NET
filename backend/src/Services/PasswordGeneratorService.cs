@@ -52,17 +52,11 @@ public sealed class PasswordGeneratorService : IPasswordGeneratorService
             throw new ArgumentNullException(nameof(request), "Request cannot be null.");
         }
 
-        var profile = request.Profile ?? "Strong";
         var isEasyToType = false;
 
         if (string.Equals(request.Profile, "EasyToType", StringComparison.OrdinalIgnoreCase))
         {
-            profile = "EasyToType";
             isEasyToType = true;
-        }
-        else
-        {
-            profile = "Strong";
         }
         var length = request.Length ?? (isEasyToType ? 0 : 20);
 
