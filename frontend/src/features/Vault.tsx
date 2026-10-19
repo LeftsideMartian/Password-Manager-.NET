@@ -1,21 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
-import type { VaultItem } from "../utils/types";
+import type { CredentialResponse } from "../utils/types";
 import { Credential } from "../components/Credential";
-import { AddCredentialOverlay } from "./AddCredentialOverlay";
-import { ViewCredentialOverlay } from "./ViewCredentialOverlay";
+import { CredentialOverlay } from "./CredentialOverlay";
+import { getCredentials } from "../api/credentials";
+import { toVaultItem } from "../utils/credentialDisplay";
 
-export function Vault() {
+export function Vault({
+  onCountChange,
+}: {
+  onCountChange?: (count: number) => void;
+}) {
   const [search, setSearch] = useState("");
   const [showAddOverlay, setShowAddOverlay] = useState(false);
-  // TODO: Load credentials for the authenticated user and
-  // keep this list in sync after create, update, and delete requests.
-  const [credentials, setCredentials] = useState<VaultItem[]>([]);
+  const [credentials, setCredentials] = useState<CredentialResponse[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [category, setCategory] = useState("All");
   const [selectedCredential, setSelectedCredential] =
-    useState<VaultItem | null>(null);
+    useState<CredentialResponse | null>(null);
 
-  const filtered = credentials.filter(
+  // Load the logged-in user's credentials from GET /credential once,
+  // when the vault is first shown.
+  useEffect(() => {
+    getCredentials()
+      .then(setCredentials)
+      .catch((err) =>
+        setLoadError(
+          err instanceof Error ? err.message : "Could not load credentials.",
+        ),
+      );
+  }, []);
+
+  // Keep the sidebar badge in step after every add or delete.
+  useEffect(() => {
+    onCountChange?.(credentials.length);
+  }, [credentials, onCountChange]);
+
+  // Replace the saved credential if it is already in the list, otherwise add it.
+  function upsert(saved: CredentialResponse) {
+    setCredentials((current) =>
+      current.some((c) => c.credentialId === saved.credentialId)
+        ? current.map((c) => (c.credentialId === saved.credentialId ? saved : c))
+        : [...current, saved],
+    );
+  }
+
+  const items = credentials.map(toVaultItem);
+
+  const filtered = items.filter(
     (item) =>
       (category === "All" || item.category === category) &&
       `${item.title} ${item.username} ${item.category}`
@@ -23,10 +55,7 @@ export function Vault() {
         .includes(search.toLowerCase()),
   );
 
-  const categories = [
-    "All",
-    ...new Set(credentials.map((item) => item.category)),
-  ];
+  const categories = ["All", ...new Set(items.map((item) => item.category))];
 
   return (
     <div className="vault-view">
@@ -42,7 +71,7 @@ export function Vault() {
           className="primary-button"
           onClick={() => setShowAddOverlay(true)}
         >
-          <Icon name="plus" size={18} /> Add password
+          <Icon name="plus" size={18} /> Add credential
         </button>
       </section>
       <div className="vault-toolbar">
@@ -56,13 +85,13 @@ export function Vault() {
         </div>
         <select
           className="filter-button"
-          aria-label="Filter by category"
+          aria-label="Filter by type"
           value={category}
           onChange={(event) => setCategory(event.target.value)}
         >
           {categories.map((option) => (
             <option value={option} key={option}>
-              {option === "All" ? "All categories" : option}
+              {option === "All" ? "All types" : option}
             </option>
           ))}
         </select>
@@ -71,28 +100,40 @@ export function Vault() {
         {filtered.map((item) => (
           <Credential
             item={item}
-            key={item.title}
-            onOpen={() => setSelectedCredential(item)}
+            key={item.credential?.credentialId ?? item.title}
+            onOpen={() => setSelectedCredential(item.credential ?? null)}
           />
         ))}
-        {filtered.length === 0 && (
+        {loadError && (
+          <div className="empty-state">Could not load your vault: {loadError}</div>
+        )}
+        {!loadError && filtered.length === 0 && (
           <div className="empty-state">No credentials match your search.</div>
         )}
       </div>
       {showAddOverlay && (
-        <AddCredentialOverlay onClose={() => setShowAddOverlay(false)} />
+        <CredentialOverlay
+          onClose={() => setShowAddOverlay(false)}
+          onSaved={(saved) => {
+            upsert(saved);
+            setShowAddOverlay(false);
+          }}
+        />
       )}
       {selectedCredential && (
-        <ViewCredentialOverlay
-          item={selectedCredential}
+        <CredentialOverlay
+          // key forces a fresh form when a different credential is opened
+          key={selectedCredential.credentialId}
+          existing={selectedCredential}
           onClose={() => setSelectedCredential(null)}
-          onDeleted={() => {
-            // TODO: Delete the credential through the API
-            // and remove it from local state only after success.
+          onSaved={(saved) => {
+            upsert(saved);
+            setSelectedCredential(null);
+          }}
+          onDeleted={(credentialId) => {
+            // Only removed from the list after the DELETE request succeeded.
             setCredentials((current) =>
-              current.filter(
-                (credential) => credential.title !== selectedCredential.title,
-              ),
+              current.filter((c) => c.credentialId !== credentialId),
             );
             setSelectedCredential(null);
           }}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon";
 import type { VaultItem } from "../utils/types";
+import { secretOf } from "../utils/credentialDisplay";
 
 export function Credential({
   item,
@@ -34,6 +35,9 @@ export function Credential({
         aria-label={`Copy ${item.title} password`}
         onClick={(event) => {
           event.stopPropagation();
+          if (item.credential) {
+            navigator.clipboard?.writeText(secretOf(item.credential));
+          }
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         }}
