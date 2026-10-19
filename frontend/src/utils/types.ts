@@ -14,6 +14,11 @@ export interface User {
   email: string;
 }
 
+export interface AuthSession {
+  token: string;
+  expiresAt: number;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

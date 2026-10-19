@@ -1,15 +1,32 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-import type { LoginResponse, User } from "../utils/types";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import type { AuthSession, LoginResponse, User } from "../utils/types";
 import {
   clearAuthSession,
-  getAuthToken,
+  getAuthSession,
   getStoredUser,
   storeAuthSession,
 } from "../utils/utils";
 
+function getValidStoredSession(): AuthSession | null {
+  const session = getAuthSession();
+
+  if (!session || session.expiresAt <= Date.now()) {
+    clearAuthSession();
+    return null;
+  }
+
+  return session;
+}
+
 type UserContextValue = {
   user: User | null;
-  token: string | null;
+  authSession: AuthSession | null;
   signIn: (response: LoginResponse) => void;
   signOut: () => void;
 };
@@ -17,25 +34,49 @@ type UserContextValue = {
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() =>
-    getAuthToken() ? getStoredUser() : null,
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() =>
+    getValidStoredSession(),
   );
-  const [token, setToken] = useState<string | null>(() => getAuthToken());
+
+  const [user, setUser] = useState<User | null>(() =>
+    authSession ? getStoredUser() : null,
+  );
 
   function signIn(response: LoginResponse) {
-    storeAuthSession(response.token, response.user);
-    setToken(response.token);
+    const authSession: AuthSession = {
+      token: response.token,
+      expiresAt: Date.now() + response.expiresIn * 1000,
+    };
+
+    storeAuthSession(authSession, response.user);
+    setAuthSession(authSession);
     setUser(response.user);
   }
 
   function signOut() {
     clearAuthSession();
-    setToken(null);
+    setAuthSession(null);
     setUser(null);
   }
 
+  useEffect(() => {
+    if (!authSession) return;
+
+    const remainingTime = authSession.expiresAt - Date.now();
+
+    if (remainingTime <= 0) {
+      signOut();
+      return;
+    }
+
+    const timeout = window.setTimeout(signOut, remainingTime);
+
+    // Cleanup above timeout when UserProvider stops rendering
+    return () => window.clearTimeout(timeout);
+  }, [authSession]);
+
   return (
-    <UserContext.Provider value={{ user, token, signIn, signOut }}>
+    <UserContext.Provider value={{ user, authSession, signIn, signOut }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,15 +1,19 @@
-import type { User } from "./types";
+import type { AuthSession, User } from "./types";
 
 const TOKEN_KEY = "token";
 const USER_KEY = "user";
 
-export function storeAuthSession(token: string, user: User) {
-  localStorage.setItem(TOKEN_KEY, token);
+export function storeAuthSession(token: AuthSession, user: User) {
+  localStorage.setItem(TOKEN_KEY, JSON.stringify(token));
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-export function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+export function getAuthSession(): AuthSession | null {
+  const tokenString = localStorage.getItem(TOKEN_KEY);
+
+  return tokenString !== null
+    ? (JSON.parse(tokenString) satisfies AuthSession)
+    : null;
 }
 
 export function getStoredUser(): User | null {

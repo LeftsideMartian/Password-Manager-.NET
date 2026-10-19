@@ -1,14 +1,16 @@
+import { getAuthSession } from "../utils/utils";
+
 const API_URL = "http://localhost:5126";
 
 async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = localStorage.getItem("token");
+  const authSession = getAuthSession();
   const headers = new Headers(options.headers);
 
   if (options.body) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (authSession) headers.set("Authorization", `Bearer ${authSession.token}`);
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
