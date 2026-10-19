@@ -4,23 +4,29 @@ import { Icon } from "../components/Icon";
 import type { VaultItem } from "../utils/types";
 import { DeleteConfirmation } from "./DeleteConfirmation";
 import { generatePassword } from "../api/password";
+import {
+  deleteCredential,
+  updateLoginCredential,
+} from "../api/credentials";
 
 export function ViewCredentialOverlay({
   item,
   onClose,
   onDeleted,
+  onUpdated,
 }: {
   item: VaultItem;
   onClose: () => void;
   onDeleted: () => void;
+  onUpdated: (
+    credential: Awaited<ReturnType<typeof updateLoginCredential>>,
+  ) => void;
 }) {
   const [site, setSite] = useState(item.title);
   const [username, setUsername] = useState(item.username);
-  // TODO(frontend-backend): Load the decrypted credential value only when
-  // this detail view is authorised, rather than using a demo password.
-  const [password, setPassword] = useState("vR8!kP2#xL9@mN4$wQ7&");
+  const [password, setPassword] = useState(item.password);
   const [category, setCategory] = useState(item.category);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(item.notes ?? "");
   const [showPassword, setShowPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
@@ -29,6 +35,7 @@ export function ViewCredentialOverlay({
   const [loading, setLoading] = useState(false);
   const [generationError, setGenerationError] = useState("");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [error, setError] = useState("");
 
   async function createPassword() {
     setLoading(true);
@@ -50,11 +57,39 @@ export function ViewCredentialOverlay({
     }
   }
 
-  function submit(event: SubmitEvent<HTMLFormElement>) {
+  async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO(frontend-backend): Persist the edited credential before closing
-    // the dialog and update the vault list with the saved response.
-    onClose();
+    setLoading(true);
+    setError("");
+    try {
+      const updated = await updateLoginCredential(item.credentialId, {
+        name: site,
+        category,
+        username,
+        password,
+        notes: notes || null,
+      });
+      onUpdated(updated);
+      onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to save credential.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function removeCredential() {
+    setLoading(true);
+    setError("");
+    try {
+      await deleteCredential(item.credentialId);
+      onDeleted();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to delete credential.");
+      setShowDeleteConfirmation(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function copyPassword() {
@@ -83,6 +118,7 @@ export function ViewCredentialOverlay({
             <h2 id="view-credential-title">Edit {item.title}</h2>
             <p>Update your saved login details securely.</p>
           </div>
+          {error && <p className="generation-error">{error}</p>}
           <button
             className="close-button"
             onClick={onClose}
@@ -242,8 +278,8 @@ export function ViewCredentialOverlay({
             <button type="button" className="cancel-button" onClick={onClose}>
               Cancel
             </button>
-            <button className="primary-button" type="submit">
-              <Icon name="lock" size={15} /> Save changes
+            <button className="primary-button" type="submit" disabled={loading}>
+              <Icon name="lock" size={15} /> {loading ? "Saving…" : "Save changes"}
             </button>
           </footer>
         </form>
@@ -252,7 +288,7 @@ export function ViewCredentialOverlay({
         <DeleteConfirmation
           credentialName={site || item.title}
           onCancel={() => setShowDeleteConfirmation(false)}
-          onConfirm={onDeleted}
+          onConfirm={removeCredential}
         />
       )}
     </div>

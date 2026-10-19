@@ -3,8 +3,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetPass.DTO.Credential.Login;
-using NetPass.DTO.Credential.PaymentCard;
-using NetPass.DTO.Credential.SSHKey;
 using NetPass.Services;
 
 namespace NetPass.Controllers;
@@ -20,22 +18,6 @@ public class CredentialController(ICredentialService credentialService) : Contro
         WithUser(userId =>
         {
             var created = credentialService.CreateLogin(request, userId);
-            return CreatedAtAction(nameof(GetById), new { id = created.CredentialId }, created);
-        });
-
-    [HttpPost("ssh-key")]
-    public IActionResult CreateSshKey([FromBody] CreateSshKeyRequest request) =>
-        WithUser(userId =>
-        {
-            var created = credentialService.CreateSshKey(request, userId);
-            return CreatedAtAction(nameof(GetById), new { id = created.CredentialId }, created);
-        });
-
-    [HttpPost("payment-card")]
-    public IActionResult CreatePaymentCard([FromBody] CreatePaymentCardRequest request) =>
-        WithUser(userId =>
-        {
-            var created = credentialService.CreatePaymentCard(request, userId);
             return CreatedAtAction(nameof(GetById), new { id = created.CredentialId }, created);
         });
 
@@ -56,22 +38,6 @@ public class CredentialController(ICredentialService credentialService) : Contro
         WithUser(userId =>
         {
             var updated = credentialService.UpdateLogin(id, request, userId);
-            return updated is null ? NotFound() : Ok(updated);
-        });
-
-    [HttpPut("{id:int}/ssh-key")]
-    public IActionResult UpdateSshKey([FromRoute] int id, [FromBody] CreateSshKeyRequest request) =>
-        WithUser(userId =>
-        {
-            var updated = credentialService.UpdateSshKey(id, request, userId);
-            return updated is null ? NotFound() : Ok(updated);
-        });
-
-    [HttpPut("{id:int}/payment-card")]
-    public IActionResult UpdatePaymentCard([FromRoute] int id, [FromBody] CreatePaymentCardRequest request) =>
-        WithUser(userId =>
-        {
-            var updated = credentialService.UpdatePaymentCard(id, request, userId);
             return updated is null ? NotFound() : Ok(updated);
         });
 

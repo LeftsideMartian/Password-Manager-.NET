@@ -2,8 +2,15 @@ import { useState } from "react";
 import type { SubmitEvent } from "react";
 import { Icon } from "../components/Icon";
 import { generatePassword } from "../api/password";
+import { createLoginCredential } from "../api/credentials";
 
-export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
+export function AddCredentialOverlay({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (credential: Awaited<ReturnType<typeof createLoginCredential>>) => void;
+}) {
   const [site, setSite] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +21,8 @@ export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
   const [length, setLength] = useState(20);
   const [loading, setLoading] = useState(false);
   const [generationError, setGenerationError] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
 
   async function createPassword() {
     setLoading(true);
@@ -35,11 +44,25 @@ export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function submit(event: SubmitEvent<HTMLFormElement>) {
+  async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: Persist the new credential before closing the
-    // dialog, then refresh the vault list from the backend.
-    onClose();
+    setLoading(true);
+    setError("");
+    try {
+      const created = await createLoginCredential({
+        name: site,
+        category,
+        username,
+        password,
+        notes: notes || null,
+      });
+      onCreated(created);
+      onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to save credential.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -198,15 +221,18 @@ export function AddCredentialOverlay({ onClose }: { onClose: () => void }) {
                 id="notes"
                 placeholder="Add a note about this login"
                 rows={3}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
               />
             </div>
           </div>
+          {error && <p className="generation-error">{error}</p>}
           <footer className="overlay-footer">
             <button type="button" className="cancel-button" onClick={onClose}>
               Cancel
             </button>
-            <button className="primary-button" type="submit">
-              <Icon name="lock" size={15} /> Save credential
+            <button className="primary-button" type="submit" disabled={loading}>
+              <Icon name="lock" size={15} /> {loading ? "Saving…" : "Save credential"}
             </button>
           </footer>
         </form>

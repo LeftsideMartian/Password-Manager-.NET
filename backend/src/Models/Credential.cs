@@ -9,6 +9,10 @@ public abstract class Credential
 {
     public int CredentialId { get; set; }
     public int UserId { get; set; }
+    [Required, MaxLength(200)]
+    public required string Name { get; set; }
+    [Required, MaxLength(100)]
+    public required string Category { get; set; }
     [MaxLength(2000)]
     public string? Notes { get; set; }
 }

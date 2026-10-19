@@ -15,8 +15,12 @@ async function apiFetch<T>(
     headers,
   });
 
-  if (!response.ok) throw new Error(`Request failed (${response.status})`);
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Request failed (${response.status})`);
+  }
 
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

@@ -3,6 +3,8 @@
 namespace NetPass.DTO.Credential.Login;
 
 public record CreateLoginRequest(
+    [Required, StringLength(200)] string Name,
+    [Required, StringLength(100)] string Category,
     [Required, StringLength(200)] string Username,
     [Required, StringLength(200)] string Password,
     [StringLength(2000)] string? Notes);

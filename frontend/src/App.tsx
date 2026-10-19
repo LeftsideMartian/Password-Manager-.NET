@@ -24,7 +24,6 @@ const navItems: NavItem[] = [
     view: "vault",
     icon: "key",
     label: "My vault",
-    badge: "12",
   },
   {
     view: "generator",
@@ -37,6 +36,7 @@ function App() {
   const { user, signOut } = useUser();
   const [view, setView] = useState<View>("overview");
   const [mobileNav, setMobileNav] = useState(false);
+  const [openVaultAdd, setOpenVaultAdd] = useState(false);
 
   if (!user) return <LoginScreen />;
 
@@ -104,8 +104,21 @@ function App() {
 
       <main className="main-content">
         <div className="page-content">
-          {view === "overview" && <Overview setView={setView} />}
-          {view === "vault" && <Vault />}
+          {view === "overview" && (
+            <Overview
+              setView={setView}
+              onAddPassword={() => {
+                setView("vault");
+                setOpenVaultAdd(true);
+              }}
+            />
+          )}
+          {view === "vault" && (
+            <Vault
+              openAddPassword={openVaultAdd}
+              onAddPasswordOpened={() => setOpenVaultAdd(false)}
+            />
+          )}
           {view === "generator" && <Generator />}
           {view === "settings" && <Settings />}
         </div>

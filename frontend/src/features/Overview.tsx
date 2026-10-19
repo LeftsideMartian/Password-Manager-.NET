@@ -1,16 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
-import { vaultItems as sharedVaultItems } from "../utils/vaultData";
 import type { View, VaultItem } from "../utils/types";
 import { useUser } from "../context/UserContext";
 import { Credential } from "../components/Credential";
 import { Stat } from "./Stat";
 import { ViewCredentialOverlay } from "./ViewCredentialOverlay";
+import { getCredentials } from "../api/credentials";
 
-export function Overview({ setView }: { setView: (view: View) => void }) {
+export function Overview({
+  setView,
+  onAddPassword,
+}: {
+  setView: (view: View) => void;
+  onAddPassword: () => void;
+}) {
   const { user } = useUser();
   const [selectedCredential, setSelectedCredential] =
     useState<VaultItem | null>(null);
+  const [recentCredentials, setRecentCredentials] = useState<VaultItem[]>([]);
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getCredentials()
+      .then((items) => {
+        setCredentialCount(items.length);
+        setRecentCredentials(
+          items.slice(0, 3).map((item) => ({
+            credentialId: item.credentialId,
+            title: item.name,
+            username: item.username,
+            password: item.password,
+            category: item.category,
+            notes: item.notes,
+            color: "blue",
+            initials: item.name.slice(0, 3).toUpperCase(),
+          })),
+        );
+      })
+      .catch(() => {
+        setCredentialCount(null);
+        setRecentCredentials([]);
+      });
+  }, []);
 
   return (
     <div className="overview">
@@ -26,18 +57,16 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
             Everything important, safely in one place.
           </p>
         </div>
-        <button className="primary-button" onClick={() => setView("generator")}>
+        <button className="primary-button" onClick={onAddPassword}>
           <Icon name="plus" size={18} /> Add password
         </button>
       </section>
       <section className="stats-grid">
-        {/* TODO: Replace these demo values with vault
-            statistics and the latest security-check result from the backend. */}
         <Stat
           icon="key"
           label="Saved passwords"
-          value="12"
-          trend="+2 this month"
+          value={credentialCount === null ? "—" : String(credentialCount)}
+          trend="Stored in your vault"
         />
         <Stat
           icon="shield"
@@ -99,15 +128,16 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
           </button>
         </div>
         <div className="credential-list">
-          {/* TODO: Render the user's latest credentials,
-              ordered by the backend's saved/updated timestamp. */}
-          {sharedVaultItems.slice(0, 3).map((item) => (
+          {recentCredentials.map((item) => (
             <Credential
               item={item}
-              key={item.title}
+              key={item.credentialId}
               onOpen={() => setSelectedCredential(item)}
             />
           ))}
+          {recentCredentials.length === 0 && (
+            <p className="empty-state">No credentials saved yet.</p>
+          )}
         </div>
       </section>
       {selectedCredential && (
@@ -115,6 +145,23 @@ export function Overview({ setView }: { setView: (view: View) => void }) {
           item={selectedCredential}
           onClose={() => setSelectedCredential(null)}
           onDeleted={() => setSelectedCredential(null)}
+          onUpdated={(updated) => {
+            setRecentCredentials((current) =>
+              current.map((credential) =>
+                credential.credentialId === updated.credentialId
+                  ? {
+                      ...credential,
+                      title: updated.name,
+                      username: updated.username,
+                      password: updated.password,
+                      category: updated.category,
+                      notes: updated.notes,
+                    }
+                  : credential,
+              ),
+            );
+            setSelectedCredential(null);
+          }}
         />
       )}
     </div>

@@ -1,10 +1,23 @@
 export type View = "overview" | "vault" | "generator" | "settings";
 export type VaultItem = {
+  credentialId: number;
   title: string;
   username: string;
+  password: string;
   category: string;
+  notes: string | null;
   color: string;
   initials: string;
+};
+
+export type LoginCredential = {
+  type: "login";
+  credentialId: number;
+  name: string;
+  category: string;
+  notes: string | null;
+  username: string;
+  password: string;
 };
 
 export interface User {
