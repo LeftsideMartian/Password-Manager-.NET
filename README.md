@@ -1,6 +1,6 @@
 # NetPass - Your new password manager
 
-For 31927 Application development with .NET
+For 31927 Application Development with .NET
 
 NetPass is a lightweight password manager web application designed to help users store, manage, and generate strong passwords in one centralised location. Users can save logins, SSH keys and payment cards; every secret is encrypted with AES before it is written to the database.
 
