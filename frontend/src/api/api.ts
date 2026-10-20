@@ -1,4 +1,4 @@
-import { getAuthSession } from "../utils/utils";
+import { getAuthSession, clearAuthSession } from "../utils/utils";
 
 const API_URL = "http://localhost:5126";
 
@@ -16,6 +16,11 @@ async function apiFetch<T>(
     ...options,
     headers,
   });
+
+  if( response.status === 401 && authSession){
+    clearAuthSession();
+    window.location.reload();
+  }
 
   if (!response.ok) throw new Error(`Request failed (${response.status})`);
 
