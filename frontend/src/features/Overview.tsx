@@ -53,7 +53,7 @@ export function Overview({
           </p>
         </div>
         <button className="primary-button" onClick={() => setView("generator")}>
-          <Icon name="plus" size={18} /> Add password
+          <Icon name="plus" size={18} /> Create password
         </button>
       </section>
       <section className="stats-grid">
